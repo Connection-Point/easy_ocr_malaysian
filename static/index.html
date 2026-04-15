@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking LPR Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-car-side"></i> <span>SmartPark LPR</span>
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-target="dashboard-view"><i class="fa-solid fa-chart-line"></i> Dashboard</li>
+                <li data-target="scheme-view"><i class="fa-solid fa-money-bill-wave"></i> Parking Scheme</li>
+                <li data-target="sysparam-view"><i class="fa-solid fa-cogs"></i> System Params</li>
+                <li data-target="records-view"><i class="fa-solid fa-list-alt"></i> All Records</li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view-section active">
+                <header>
+                    <h1>Dashboard Overview</h1>
+                    <div class="header-actions">
+                        <button onclick="loadDashboard()" class="btn primary"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    </div>
+                </header>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Active Scheme</h3>
+                        <p id="dash-scheme-name">Loading...</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>1st Hr / Addl</h3>
+                        <p id="dash-scheme-rates">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="charts-wrapper" style="display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;">
+                    <div class="chart-card" style="flex: 1; min-width: 300px; background: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h3 style="margin-bottom: 12px; font-size: 1rem; color: var(--text-muted);">CAR ENTRIES OVER TIME</h3>
+                        <canvas id="entriesChart"></canvas>
+                    </div>
+                    <div class="chart-card" style="flex: 1; min-width: 300px; background: var(--bg-card); padding: 24px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="font-size: 1rem; color: var(--text-muted);">REVENUE TRACKER</h3>
+                            <select id="revenue-filter" onchange="loadRevenueChart()" style="background: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); padding: 6px; border-radius: 6px; font-family: inherit;">
+                                <option value="hourly">Hourly (Last 24h)</option>
+                                <option value="daily">Daily (Last 30d)</option>
+                                <option value="weekly">Weekly (Last 12w)</option>
+                                <option value="monthly">Monthly (Last 1Y)</option>
+                            </select>
+                        </div>
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <h2>Recent Activities</h2>
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Plate</th>
+                                <th>In</th>
+                                <th>Out</th>
+                                <th>Fee</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboard-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Scheme View -->
+            <section id="scheme-view" class="view-section">
+                <header>
+                    <h1>Parking Schemes</h1>
+                    <button class="btn primary" onclick="openModal('scheme-modal', 'scheme')"><i class="fa-solid fa-plus"></i> New Scheme</button>
+                </header>
+                <div class="table-container">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>1st Hr</th>
+                                <th>Add. Hr</th>
+                                <th>Grace</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheme-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Params View -->
+            <section id="sysparam-view" class="view-section">
+                <header>
+                    <h1>System Parameters</h1>
+                    <button class="btn primary" onclick="openModal('sysparam-modal', 'sysparam')"><i class="fa-solid fa-plus"></i> New Param</button>
+                </header>
+                <div class="table-container">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sysparam-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Records View -->
+            <section id="records-view" class="view-section">
+                <header>
+                    <h1>All Parking Records</h1>
+                    <button class="btn primary" onclick="openModal('record-modal', 'record')"><i class="fa-solid fa-plus"></i> New Record</button>
+                </header>
+                <div class="table-container" style="overflow-x: auto;">
+                    <table class="glass-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Plate</th>
+                                <th>In Time</th>
+                                <th>Out Time</th>
+                                <th>Fee</th>
+                                <th>Status</th>
+                                <th>Pay Code</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div id="modal-overlay" class="modal-overlay">
+        <!-- Scheme Modal -->
+        <div id="scheme-modal" class="modal">
+            <h2>Parking Scheme</h2>
+            <form id="scheme-form" onsubmit="submitForm(event, 'scheme')">
+                <input type="hidden" id="scheme_id" name="id">
+                <div class="form-group">
+                    <label>Scheme Name</label>
+                    <input type="text" id="scheme_name" name="scheme_name" required>
+                </div>
+                <div class="form-group">
+                    <label>1st Hour Rate</label>
+                    <input type="number" step="0.01" id="first_hour_rate" name="first_hour_rate" required>
+                </div>
+                <div class="form-group">
+                    <label>Additional Hour Rate</label>
+                    <input type="number" step="0.01" id="additional_hour_rate" name="additional_hour_rate" required>
+                </div>
+                <div class="form-group">
+                    <label>Grace Period (mins)</label>
+                    <input type="number" id="grace_period_mins" name="grace_period_mins" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn primary">Save</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SysParam Modal -->
+        <div id="sysparam-modal" class="modal">
+            <h2>System Parameter</h2>
+            <form id="sysparam-form" onsubmit="submitForm(event, 'sysparam')">
+                <div class="form-group">
+                    <label>Param Code (ID)</label>
+                    <input type="number" id="param_code" name="param_code" required>
+                </div>
+                <div class="form-group">
+                    <label>Param Name</label>
+                    <input type="text" id="param_name" name="param_name" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn primary">Save</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Record Modal -->
+        <div id="record-modal" class="modal">
+            <h2>Parking Record</h2>
+            <form id="record-form" onsubmit="submitForm(event, 'record')">
+                <input type="hidden" id="record_id" name="id">
+                <div class="form-group">
+                    <label>Plate Number</label>
+                    <input type="text" id="plate_number" name="plate_number" required>
+                </div>
+                <div class="form-group">
+                    <label>In Time (YYYY-MM-DD HH:MM:SS)</label>
+                    <input type="text" id="in_time" name="in_time" required>
+                </div>
+                <div class="form-group">
+                    <label>Out Time (optional)</label>
+                    <input type="text" id="out_time" name="out_time">
+                </div>
+                <div class="form-group">
+                    <label>Fee</label>
+                    <input type="number" step="0.01" id="fee" name="fee" required>
+                </div>
+                <div class="form-group">
+                    <label>Status Code</label>
+                    <input type="number" id="status_code" name="status_code" required>
+                </div>
+                <div class="form-group">
+                    <label>Payment Code</label>
+                    <input type="number" id="payment_status_code" name="payment_status_code" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
