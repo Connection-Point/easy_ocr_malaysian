@@ -14,11 +14,12 @@ def get_connection():
 
 def init_db():
     try:
-        conn = mysql.connector.connect(
-            host=DB_CONFIG['host'],
-            user=DB_CONFIG['user'],
-            password=DB_CONFIG['password']
-        )
+        # conn = mysql.connector.connect(
+        #     host=DB_CONFIG['host'],
+        #     user=DB_CONFIG['user'],
+        #     password=DB_CONFIG['password']
+        # )
+        conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
         cursor.execute("CREATE DATABASE IF NOT EXISTS lpr_testing")
         cursor.execute("USE lpr_testing")
@@ -92,9 +93,9 @@ def init_db():
         conn.commit()
         cursor.close()
         conn.close()
-        print("✅ Database Layer Initialized.")
+        print("[OK] Database Layer Initialized.")
     except Exception as e:
-        print(f"❌ Database error: {e}")
+        print(f"[ERROR] Database error: {e}")
 
 if __name__ == "__main__":
     init_db()

@@ -17,5 +17,7 @@ huggingface_hub
 opencv-python
 easyocr
 mysql-connector-python
+pywebview
+pymysql
 
 
